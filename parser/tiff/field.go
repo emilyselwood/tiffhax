@@ -12,13 +12,14 @@ import (
 )
 
 type Field struct {
-	Start int64
-	End   int64
-	Data  []byte
-	ID    uint16
-	DType uint16
-	Count uint32
-	Value interface{}
+	Start    int64
+	End      int64
+	Data     []byte
+	ID       uint16
+	DType    uint16
+	Count    uint32
+	Value    interface{}
+	IsOffset bool
 }
 
 func ParseField(in io.Reader, start int64, order binary.ByteOrder) (*Field, *Offset, error) {
@@ -43,19 +44,21 @@ func ParseField(in io.Reader, start int64, order binary.ByteOrder) (*Field, *Off
 	result.Value = order.Uint32(data[8:12])
 
 	// do we have an offset or a value
-	if result.Count * constants.DataTypeSize[result.DType] > 4 {
+	if result.Count*constants.DataTypeSize[result.DType] > 4 {
+		result.IsOffset = true
+
 		var offset Offset
 		offset.DType = int(result.DType)
 		offset.From = start
 		offset.To = int64(order.Uint32(data[8:12]))
 		offset.Count = result.Count
+		offset.FieldId = result.ID
 
 		return &result, &offset, nil
 	}
 
 	return &result, nil, nil
 }
-
 
 func (f *Field) Contains(offset int64) bool {
 	return f.Start <= offset && offset < f.End
@@ -82,7 +85,7 @@ func (f *Field) Render() ([]payload.Section, error) {
 		"FieldNames": func(fieldId uint16) string {
 			return constants.FieldNames[fieldId]
 		},
-		"DataTypeNames" : func(typeId uint16) string {
+		"DataTypeNames": func(typeId uint16) string {
 			return constants.DataTypeNames[typeId]
 		},
 		// TODO: lookups for field value meanings
@@ -114,4 +117,6 @@ func (f *Field) Render() ([]payload.Section, error) {
 
 }
 
-const fieldTemplate = `A field called <span class="field_id">{{ FieldNames .ID}}</span> is a <span class="field_type">{{ DataTypeNames .DType }}</span> with <span class="field_count">{{.Count}}</span> entries and value <span class="field_value">{{.Value}}</span>`
+const fieldTemplate = `A field called <span class="field_id">{{ FieldNames .ID}}</span> 
+is <span class="field_count">{{.Count}}</span> <span class="field_type">{{ DataTypeNames .DType }}</span> values. 
+The value shows {{ if .IsOffset }}<a href=".Value">{{end}}<span class="field_value">{{.Value}}</span>{{ if .IsOffset }}<a/> which is an offset value{{end}}`

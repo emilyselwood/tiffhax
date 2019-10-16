@@ -41,13 +41,12 @@ func setupHttpServer(data payload.Payload) net.Listener {
 			log.Fatalf("Could not parse template files %s", err)
 		}
 
-
 		if err := templates.Execute(w, data); err != nil {
 			log.Printf("Error writing template: %s", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		// Now that the page has been loaded the program can exit.
+		// Now that the page has been loaded the program can exit once we've given the http handler time to finish its stuff
 		go func() {
 			time.Sleep(10 *time.Millisecond)
 			os.Exit(0)

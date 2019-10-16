@@ -12,7 +12,7 @@
     </thead>
     {{ range .Sections }}
         <tr>
-            <td class="offset" id="{{ .ID }}">{{ .Offset }}</td>
+            <td class="offset" id="{{ .ID }}" class="{{ .Class }}">{{ .Offset }}</td>
             <td class="data">{{ .Data }}</td>
             <td>{{ .Description }}</td>
         </tr>

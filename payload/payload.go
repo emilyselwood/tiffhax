@@ -3,6 +3,7 @@ package payload
 import (
 	"fmt"
 	"html/template"
+	"strconv"
 )
 
 type Payload struct {
@@ -13,6 +14,7 @@ type Payload struct {
 
 type Section interface {
 	ID() string
+	Class() string
 	Offset() string
 	Data() template.HTML
 	Description() template.HTML
@@ -30,6 +32,10 @@ type General struct {
 }
 
 func (g *General) ID() string {
+	return strconv.FormatInt(g.Start, 10)
+}
+
+func (g *General) Class() string {
 	return g.Id
 }
 
