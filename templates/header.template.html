@@ -1,0 +1,21 @@
+{{ define "title"}}{{.Title}}{{ end }}
+
+{{ define "content" }}
+<h1>{{.FileName}}</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Offset</th>
+            <th>Data</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    {{ range .Sections }}
+        <tr>
+            <td class="offset" id="{{ .ID }}">{{ .Offset }}</td>
+            <td class="data">{{ .Data }}</td>
+            <td>{{ .Description }}</td>
+        </tr>
+    {{ end }}
+</table>
+{{ end }}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ template "title" . }}</title>
+    <style type="text/css">
+        table {
+            width: 100%
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        .data {
+            font-family: "Droid Sans Mono", monospace;
+        }
+        .header_endian {
+            background-color: greenyellow;
+        }
+        .header_offset {
+            background-color: lightskyblue;
+        }
+        .header_magic {
+            background-color: lightcoral;
+        }
+    </style>
+</head>
+    <body>
+        {{ template "content" . }}
+    </body>
+</html>
