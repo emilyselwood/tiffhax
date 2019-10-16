@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 )
 
 func parseFile(filePath string) payload.Payload {
@@ -29,35 +30,29 @@ func parseFile(filePath string) payload.Payload {
 	}
 }
 
-func setupHttpServer(data payload.Payload, debug bool) net.Listener {
-	var templates *template.Template
-	var err error
-	if !debug {
-		templates, err = template.ParseFiles(
+func setupHttpServer(data payload.Payload) net.Listener {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Simply write some test data for now
+		templates, err := template.ParseFiles(
 			"templates/index.template.html",
 			"templates/header.template.html",
 		)
 		if err != nil {
 			log.Fatalf("Could not parse template files %s", err)
 		}
-	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// Simply write some test data for now
-		if debug {
-			templates, err = template.ParseFiles(
-				"templates/index.template.html",
-				"templates/header.template.html",
-			)
-			if err != nil {
-				log.Fatalf("Could not parse template files %s", err)
-			}
-		}
 
 		if err := templates.Execute(w, data); err != nil {
 			log.Printf("Error writing template: %s", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
+		// Now that the page has been loaded the program can exit.
+		go func() {
+			time.Sleep(10 *time.Millisecond)
+			os.Exit(0)
+		}()
+
 	})
 
 	// run the webserver
@@ -71,7 +66,6 @@ func setupHttpServer(data payload.Payload, debug bool) net.Listener {
 
 func main() {
 	// set up, get flags etc
-	debug := flag.Bool("debug", false, "reload the templates on every request.")
 	flag.Parse()
 
 	if flag.NArg() < 1 {
@@ -83,7 +77,7 @@ func main() {
 	data := parseFile(flag.Arg(0))
 
 	// setup the http server
-	l := setupHttpServer(data, *debug)
+	l := setupHttpServer(data)
 
 	// The browser can connect now because the listening socket is open.
 	err := open.Start("http://localhost:3000/")

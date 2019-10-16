@@ -76,20 +76,17 @@ func (h *Header) Split(start int64, end int64, newBit parser.Region) error {
 }
 
 func (h *Header) Render() ([]payload.Section, error) {
-	tmpl, err := template.New("description").Parse(headerTemplate)
+	desc, err := payload.RenderTemplate(headerTemplate, h, template.FuncMap{})
 	if err != nil {
-		return nil, fmt.Errorf("could not parse description template, %v", err)
-	}
-
-	var descBuffer bytes.Buffer
-	if err := tmpl.Execute(&descBuffer, h); err != nil {
-		return nil, fmt.Errorf("could not render description template, %v", err)
+		return nil, fmt.Errorf("could not render header description, %v", err)
 	}
 
 	var data bytes.Buffer
 
 	payload.RenderBytesSpan(&data, h.Data[0:2], "header_endian")
+	data.WriteRune(' ')
 	payload.RenderBytesSpan(&data, h.Data[2:4], "header_magic")
+	data.WriteRune(' ')
 	payload.RenderBytesSpan(&data, h.Data[4:8], "header_offset")
 
 	return []payload.Section{
@@ -98,7 +95,7 @@ func (h *Header) Render() ([]payload.Section, error) {
 			End:     h.End - 1,
 			Id:      "header",
 			TheData: template.HTML(data.String()),
-			Text:    template.HTML(descBuffer.String()),
+			Text:    template.HTML(desc),
 		},
 	}, nil
 }

@@ -2,10 +2,26 @@ package payload
 
 import (
 	"bytes"
+	"fmt"
+	"html/template"
 	"io"
 	"strconv"
 	"strings"
 )
+
+func RenderTemplate(t string, data interface{}, funcMap template.FuncMap) (string, error) {
+	tmpl, err := template.New("template").Funcs(funcMap).Parse(t)
+	if err != nil {
+		return "", fmt.Errorf("could not parse template, %v", err)
+	}
+
+	var descBuffer bytes.Buffer
+	if err := tmpl.Execute(&descBuffer, data); err != nil {
+		return "", fmt.Errorf("could not render template, %v", err)
+	}
+
+	return descBuffer.String(), nil
+}
 
 /*
 RenderBytesSpan writes a byte array formatted as hex with a surrounding span.

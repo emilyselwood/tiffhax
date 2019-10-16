@@ -7,4 +7,5 @@ type Offset struct {
 	From  int64
 	To    int64
 	DType int
+	Count uint32
 }

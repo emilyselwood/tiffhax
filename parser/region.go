@@ -24,7 +24,7 @@ type Unknown struct {
 }
 
 func (u *Unknown) Contains(offset int64) bool {
-	return u.Start < offset && offset < u.End
+	return u.Start <= offset && offset < u.End
 }
 
 func (u *Unknown) ContainsRegion(start int64, end int64) bool {
