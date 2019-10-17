@@ -22,7 +22,7 @@ func parseFile(filePath string) payload.Payload {
 
 	sections, err := tiff.ParseFile(f)
 	if err != nil {
-		log.Fatalf("Could not open parse: %s", err)
+		log.Fatalf("Could not parse: %s", err)
 	}
 
 	return payload.Payload{

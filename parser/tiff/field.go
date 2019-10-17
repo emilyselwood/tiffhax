@@ -18,18 +18,18 @@ type Field struct {
 	ID       uint16
 	DType    uint16
 	Count    uint32
-	Value    interface{}
+	Value    uint32
 	IsOffset bool
 }
 
-func ParseField(in io.Reader, start int64, order binary.ByteOrder) (*Field, *Offset, error) {
+func ParseField(in io.Reader, start int64, order binary.ByteOrder) (*Field, *Offset, *Data, error) {
 	data := make([]byte, 12)
 	n, err := in.Read(data)
 	if err != nil {
-		return nil, nil, fmt.Errorf("could not read ifd field, %v", err)
+		return nil, nil, nil, fmt.Errorf("could not read ifd field, %v", err)
 	}
 	if n != 12 {
-		return nil, nil, fmt.Errorf("strange size read from ifd field got %v expected 12", n)
+		return nil, nil, nil, fmt.Errorf("strange size read from ifd field got %v expected 12", n)
 	}
 
 	var result Field
@@ -42,22 +42,29 @@ func ParseField(in io.Reader, start int64, order binary.ByteOrder) (*Field, *Off
 	result.DType = order.Uint16(data[2:4])
 	result.Count = order.Uint32(data[4:8])
 	result.Value = order.Uint32(data[8:12])
+	// TODO: parse ascii better if its not an offset.
 
 	// do we have an offset or a value
 	if result.Count*constants.DataTypeSize[result.DType] > 4 {
 		result.IsOffset = true
 
 		var offset Offset
-		offset.DType = int(result.DType)
+		offset.DType = result.DType
 		offset.From = start
-		offset.To = int64(order.Uint32(data[8:12]))
+		offset.To = int64(result.Value)
 		offset.Count = result.Count
 		offset.FieldId = result.ID
 
-		return &result, &offset, nil
+		return &result, &offset, nil, nil
 	}
 
-	return &result, nil, nil
+	if result.ID == 273 { // stripOffset field wasn't an offset so it must be a single pointer.
+		var d Data
+		d.Start = int64(result.Value)
+		return &result, nil, &d, nil
+	}
+
+	return &result, nil, nil, nil
 }
 
 func (f *Field) Contains(offset int64) bool {
@@ -88,7 +95,20 @@ func (f *Field) Render() ([]payload.Section, error) {
 		"DataTypeNames": func(typeId uint16) string {
 			return constants.DataTypeNames[typeId]
 		},
-		// TODO: lookups for field value meanings
+		"FieldValueLookUp" : func() string {
+			if f.IsOffset {
+				return " which is an offset"
+			}
+
+			fieldValues, ok := constants.FieldValueLookup[f.ID]
+			if ok {
+				value, ok := fieldValues[f.Value]
+				if ok {
+					return " which means " + value
+				}
+			}
+			return ""
+		},
 		// TODO: better descriptions
 	})
 	if err != nil {
@@ -118,5 +138,6 @@ func (f *Field) Render() ([]payload.Section, error) {
 }
 
 const fieldTemplate = `A field called <span class="field_id">{{ FieldNames .ID}}</span> 
-is <span class="field_count">{{.Count}}</span> <span class="field_type">{{ DataTypeNames .DType }}</span> values. 
-The value shows {{ if .IsOffset }}<a href=".Value">{{end}}<span class="field_value">{{.Value}}</span>{{ if .IsOffset }}<a/> which is an offset value{{end}}`
+is <span class="field_count">{{ .Count }}</span> <span class="field_type">{{ DataTypeNames .DType }}</span> values. 
+The value shows {{ if .IsOffset }}<a href="#{{ .Value }}">{{end}}<span class="field_value">{{ .Value }}</span>{{ if .IsOffset }}<a/>{{end}}
+{{ FieldValueLookUp }}`

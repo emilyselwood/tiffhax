@@ -20,12 +20,12 @@ type IFD struct {
 	Next uint32
 }
 
-func ParseIFD(in io.Reader, start int64, order binary.ByteOrder) (*IFD, int64, []*Offset, error) {
+func ParseIFD(in io.Reader, start int64, order binary.ByteOrder) (*IFD, int64, []*Offset, []*Data, error) {
 	ifdHeader := make([]byte, 2)
 
 	n, err := in.Read(ifdHeader)
 	if err != nil {
-		return nil, int64(n), nil, fmt.Errorf("could not read ifd header, %v", err)
+		return nil, int64(n), nil, nil, fmt.Errorf("could not read ifd header, %v", err)
 	}
 
 	var result IFD
@@ -37,27 +37,49 @@ func ParseIFD(in io.Reader, start int64, order binary.ByteOrder) (*IFD, int64, [
 
 	// Now read the fields for the IFD
 	var offsets []*Offset
+	var data []*Data
 	for i := 0; i < int(result.Count); i++ {
 		fieldStart := start + 2 + (int64(i) * 12)
-		field, offset, err := ParseField(in, fieldStart, order)
+		field, offset, d, err := ParseField(in, fieldStart, order)
 		if err != nil {
-			return nil, 0, nil, fmt.Errorf("could not parse field %v of ifd, %v", i, err)
+			return nil, 0, nil, nil, fmt.Errorf("could not parse field %v of ifd, %v", i, err)
 		}
+
 		result.Children = append(result.Children, field)
 		if offset != nil {
 			offsets = append(offsets, offset)
 		}
+		if d != nil {
+			data = append(data, d)
+		}
+	}
+
+	for _, o := range offsets {
+		o.IFD = &result
+	}
+
+	for _, d := range data {
+		d.IFD = &result
 	}
 
 	nextIFD := make([]byte, 4)
 	n, err = in.Read(nextIFD)
 	if err != nil {
-		return nil, int64(n), nil, fmt.Errorf("could not read ifd footer, %v", err)
+		return nil, int64(n), nil, nil, fmt.Errorf("could not read ifd footer, %v", err)
 	}
 
 	result.Next = order.Uint32(nextIFD)
 	result.FooterData = nextIFD
-	return &result, result.End, offsets, nil
+	return &result, result.End, offsets, data, nil
+}
+
+func (i *IFD) FindField(id uint16) (*Field, error) {
+	for _, c := range i.Children {
+		if c.ID == id {
+			return c, nil
+		}
+	}
+	return nil, fmt.Errorf("could not find field %v in ifd starting at %v", id, i.Start)
 }
 
 

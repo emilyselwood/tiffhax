@@ -45,10 +45,16 @@ func RenderBytes(in []byte) string {
 	if len(in) > 0 {
 		buffer.WriteString(RenderByte(in[0]))
 		if len(in) > 1 {
+			i := 1
 			for _, b := range in[1:] {
 				buffer.WriteString(" ")
 
 				buffer.WriteString(RenderByte(b))
+				i++
+				if i == 16 {
+					buffer.WriteString("<br />")
+					i = 0
+				}
 			}
 		}
 	}

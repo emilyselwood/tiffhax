@@ -6,8 +6,6 @@ import (
 	"strconv"
 )
 
-
-
 type Region interface {
 	Split(start int64, end int64, newBit Region) error
 	Render() ([]payload.Section, error)
@@ -28,7 +26,7 @@ func (u *Unknown) Contains(offset int64) bool {
 }
 
 func (u *Unknown) ContainsRegion(start int64, end int64) bool {
-	return u.Start <= start && start < u.End && u.Start < end && end < u.End
+	return u.Start <= start && start < u.End && u.Start < end && end <= u.End
 }
 
 func (u *Unknown) Find(offset int64) (Region, error) {
@@ -53,44 +51,45 @@ func (u *Unknown) Split(start int64, end int64, newBit Region) error {
 	if !u.ContainsRegion(start, end) {
 		return fmt.Errorf("split region %v to %v outside of region %v to %v", start, end, u.Start, u.End)
 	}
-	if len(u.Children) == 0 {
-		if start == u.Start {
-			u.Children = []Region{
-				newBit,
-				&Unknown{
-					Start:    end,
-					End:      u.End,
-					Children: nil,
-				},
-			}
-		} else if end == u.End {
-			u.Children = []Region{
-				&Unknown{
-					Start:    u.Start,
-					End:      start,
-					Children: nil,
-				},
-				newBit,
-			}
-		} else {
-
-			u.Children = []Region{
-				&Unknown{
-					Start:    u.Start,
-					End:      start,
-					Children: nil,
-				},
-				newBit,
-				&Unknown{
-					Start:    end,
-					End:      u.End,
-					Children: nil,
-				},
-			}
-		}
-	} else {
+	if len(u.Children) != 0 {
 		return fmt.Errorf("split region %v to %v is in %v to %v but it has children already", start, end, u.Start, u.End)
 	}
+
+	if start == u.Start && end == u.End {
+		// Really we should replace this Unknown in its parent but this works for now.
+		u.Children = []Region{
+			newBit,
+		}
+	} else if start == u.Start {
+		u.Children = []Region{
+			newBit,
+			&Unknown{
+				Start: end,
+				End:   u.End,
+			},
+		}
+	} else if end == u.End {
+		u.Children = []Region{
+			&Unknown{
+				Start: u.Start,
+				End:   start,
+			},
+			newBit,
+		}
+	} else {
+		u.Children = []Region{
+			&Unknown{
+				Start: u.Start,
+				End:   start,
+			},
+			newBit,
+			&Unknown{
+				Start: end,
+				End:   u.End,
+			},
+		}
+	}
+
 	return nil
 }
 
