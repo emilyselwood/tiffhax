@@ -55,12 +55,17 @@ func ParseField(in io.Reader, start int64, order binary.ByteOrder) (*Field, *Off
 		offset.Count = result.Count
 		offset.FieldId = result.ID
 
+		if result.ID == 273 || result.ID == 324 {
+			offset.IsData = true
+		}
+
 		return &result, &offset, nil, nil
 	}
 
-	if result.ID == 273 { // stripOffset field wasn't an offset so it must be a single pointer.
+	if result.ID == 273 || result.ID == 324 { // stripOffset field wasn't an offset so it must be a single pointer.
 		var d Data
 		d.Start = int64(result.Value)
+
 		return &result, nil, &d, nil
 	}
 

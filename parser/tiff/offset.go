@@ -58,8 +58,11 @@ func (o *Offset) Parse(in io.ReadSeeker, order binary.ByteOrder) ([]*Data, error
 			return nil, fmt.Errorf("got wrong number of bytes from read, expected %v got %v", constants.DataTypeSize[o.DType], n)
 		}
 
+		o.Data = append(o.Data, chunk...)
+
 		d.Start = int64(order.Uint32(chunk))
 		d.IFD = o.IFD
+		d.I = i
 		data = append(data, &d)
 	}
 
@@ -83,7 +86,7 @@ func (o *Offset) Find(offset int64) (parser.Region, error) {
 }
 
 func (o *Offset) Split(start int64, end int64, newBit parser.Region) error {
-	return fmt.Errorf("offset can not be split")
+	return fmt.Errorf("offset at %v to %v can not be split between %v and %v", o.Start, o.End, start, end)
 }
 
 func (o *Offset) Render() ([]payload.Section, error) {
