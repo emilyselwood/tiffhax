@@ -23,6 +23,42 @@ func RenderTemplate(t string, data interface{}, funcMap template.FuncMap) (strin
 	return descBuffer.String(), nil
 }
 
+func RenderByteBlocks(target io.StringWriter, in []byte, length int, classes []string) {
+	done := false
+	start := 0
+	end := length
+	i := 0
+	for !done {
+		if i > 0 {
+			_, _ = target.WriteString(" ")
+		}
+		_, _ = target.WriteString("<span class=\"")
+		_, _ = target.WriteString(classes[i % len(classes)])
+		_, _ = target.WriteString("\">")
+		for j, b := range in[start:end] {
+			if j > 0 {
+				_, _ = target.WriteString(" ")
+			}
+			_, _ = target.WriteString(RenderByte(b))
+			i++
+			if i == 16 {
+				_, _ = target.WriteString("<br />")
+				i = 0
+			}
+		}
+		_, _ = target.WriteString("</span>")
+
+		start = end
+		end = end + length
+		if end > len(in) {
+			end = len(in)
+		}
+		if start >= len(in) {
+			done = true
+		}
+	}
+}
+
 /*
 RenderBytesSpan writes a byte array formatted as hex with a surrounding span.
 This is useful for highlighting sections of the data.

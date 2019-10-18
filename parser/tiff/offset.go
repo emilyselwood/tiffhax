@@ -1,6 +1,7 @@
 package tiff
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"github.com/emilyselwood/tiffhax/parser"
@@ -103,9 +104,9 @@ func (o *Offset) Render() ([]payload.Section, error) {
 		return nil, fmt.Errorf("couldn't render offset description, %v", err)
 	}
 
-	var data string
+	var dataBuffer bytes.Buffer
 	if len(o.Data) > 0 {
-		data = payload.RenderBytes(o.Data)
+		payload.RenderByteBlocks(&dataBuffer, o.Data, int(constants.DataTypeSize[o.DType]), []string {"offset_a", "offset_b", "offset_c"})
 	}
 
 	return []payload.Section{
@@ -113,7 +114,7 @@ func (o *Offset) Render() ([]payload.Section, error) {
 			Start:   o.Start,
 			End:     o.End - 1,
 			Id:      "offset",
-			TheData: template.HTML(data),
+			TheData: template.HTML(dataBuffer.String()),
 			Text:    template.HTML(desc),
 		},
 	}, nil
