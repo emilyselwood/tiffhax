@@ -31,7 +31,7 @@ func ParseFile(in io.ReadSeeker) ([]payload.Section, error) {
 
 	var offsets []*Offset
 	var data []*Data
-	// start with the first IFD
+	// start with the first IFD (there must be at least one)
 	ifd, offset, d, err := readIFD(in, header, header.FirstIFDOffset)
 	if err != nil {
 		return nil, fmt.Errorf("could not read first ifd, %v", err)
@@ -44,7 +44,7 @@ func ParseFile(in io.ReadSeeker) ([]payload.Section, error) {
 	data = append(data, d...)
 
 	for ifd.Next != 0 {
-		ifd, offset, d, err := readIFD(in, header, int64(ifd.Next))
+		ifd, offset, d, err = readIFD(in, header, int64(ifd.Next))
 		if err != nil {
 			return nil, fmt.Errorf("could not read ifd, %v", err)
 		}
@@ -89,12 +89,12 @@ func ParseFile(in io.ReadSeeker) ([]payload.Section, error) {
 }
 
 func readIFD(in io.ReadSeeker, header *Header, offset int64) (*IFD, []*Offset, []*Data, error) {
-	_, err := in.Seek(header.FirstIFDOffset, io.SeekStart)
+	_, err := in.Seek(offset, io.SeekStart)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("could not seek to IFD, %v", err)
 	}
 
-	ifd, _, offsets, d, err := ParseIFD(in, header.FirstIFDOffset, header.Endian)
+	ifd, _, offsets, d, err := ParseIFD(in, offset, header.Endian)
 	if err != nil {
 		return  nil, nil, nil, fmt.Errorf("could not parse IFD, %v", err)
 	}

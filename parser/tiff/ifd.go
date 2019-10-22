@@ -173,7 +173,7 @@ func (i *IFD) renderFooter() (payload.Section, error) {
 	if i.Next == 0 {
 		desc = "This is the last IFD in the chain. If this <span class=\"ifd_footer\">0</span> was a number it would point to the next ifd"
 	} else {
-		desc = fmt.Sprintf("The next ifd can be found at offset <span class=\"ifd_footer\">%v</span>", i.Next)
+		desc = fmt.Sprintf("The next ifd can be found at offset <a href=\"#%v\"><span class=\"ifd_footer\">%v</span></a>", i.Next, i.Next)
 	}
 
 	payload.RenderBytesSpan(&data, i.FooterData, "ifd_footer")
