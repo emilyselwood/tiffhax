@@ -106,6 +106,6 @@ func (u *Unknown) Render() ([]payload.Section, error) {
 		return result, nil
 	} else {
 		// TODO better rendering.
-		return []payload.Section{&payload.General{Start: u.Start, End: u.End, Id: strconv.FormatInt(u.Start, 10)}}, nil
+		return []payload.Section{&payload.General{Start: u.Start, End: u.End, Id: strconv.FormatInt(u.Start, 10), Text: "Un-parsed section"}}, nil
 	}
 }

@@ -23,10 +23,10 @@ func ParseFile(in io.ReadSeeker) ([]payload.Section, error) {
 	// start by parsing the header
 	header, l, err := ParseHeader(in)
 	if err != nil {
-		return nil, err
+		return returnError(&startRegion, fmt.Errorf("could not parse header, %v", err))
 	}
 	if err := insert(&startRegion, header, 0, l); err != nil {
-		return nil, fmt.Errorf("could not insert header %v", err)
+		return returnError(&startRegion, fmt.Errorf("could not insert header %v", err))
 	}
 
 	var offsets []*Offset
@@ -34,11 +34,11 @@ func ParseFile(in io.ReadSeeker) ([]payload.Section, error) {
 	// start with the first IFD (there must be at least one)
 	ifd, offset, d, err := readIFD(in, header, header.FirstIFDOffset)
 	if err != nil {
-		return nil, fmt.Errorf("could not read first ifd, %v", err)
+		return returnError(&startRegion, fmt.Errorf("could not read first ifd, %v", err))
 	}
 
 	if err := insert(&startRegion, ifd, ifd.Start, ifd.End); err != nil {
-		return nil, fmt.Errorf("could not insert ifd, %v", err)
+		return returnError(&startRegion, fmt.Errorf("could not insert ifd, %v", err))
 	}
 	offsets = append(offsets, offset...)
 	data = append(data, d...)
@@ -46,11 +46,11 @@ func ParseFile(in io.ReadSeeker) ([]payload.Section, error) {
 	for ifd.Next != 0 {
 		ifd, offset, d, err = readIFD(in, header, int64(ifd.Next))
 		if err != nil {
-			return nil, fmt.Errorf("could not read ifd, %v", err)
+			return returnError(&startRegion, fmt.Errorf("could not read ifd, %v", err))
 		}
 
 		if err := insert(&startRegion, ifd, ifd.Start, ifd.End); err != nil {
-			return nil, fmt.Errorf("could not insert ifd, %v", err)
+			return returnError(&startRegion, fmt.Errorf("could not insert ifd, %v", err))
 		}
 		offsets = append(offsets, offset...)
 		data = append(data, d...)
@@ -61,10 +61,10 @@ func ParseFile(in io.ReadSeeker) ([]payload.Section, error) {
 	for _, o := range offsets {
 		d, err := o.Parse(in, header.Endian)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse offset, %v", err)
+			return returnError(&startRegion, fmt.Errorf("could not parse offset, %v", err))
 		}
 		if err := insert(&startRegion, o, o.Start, o.End); err != nil {
-			return nil, fmt.Errorf("could not insert offset result, %v", err)
+			return returnError(&startRegion, fmt.Errorf("could not insert offset result, %v", err))
 		}
 		data = append(data, d...)
 	}
@@ -77,15 +77,23 @@ func ParseFile(in io.ReadSeeker) ([]payload.Section, error) {
 	for _, d := range data {
 		err := d.Parse(in, header.Endian)
 		if err != nil {
-			return nil, fmt.Errorf("could not parse data information, %v", err)
+			return returnError(&startRegion, fmt.Errorf("could not parse data information, %v", err))
 		}
 		if err := insert(&startRegion, d, d.Start, d.End); err != nil {
-			return nil, fmt.Errorf("could not insert data result, %v", err)
+			return returnError(&startRegion, fmt.Errorf("could not insert data result, %v", err))
 		}
 	}
 
 
 	return startRegion.Render()
+}
+
+func returnError(startRegion parser.Region, inErr error) ([]payload.Section, error) {
+	res, err := startRegion.Render();
+	if err != nil {
+		return res, fmt.Errorf("%v, additionaly while rendering the output the following happend: %v", inErr, err)
+	}
+	return res, inErr
 }
 
 func readIFD(in io.ReadSeeker, header *Header, offset int64) (*IFD, []*Offset, []*Data, error) {
