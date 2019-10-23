@@ -8,6 +8,7 @@ import (
 	"github.com/emilyselwood/tiffhax/payload"
 	"html/template"
 	"io"
+	"reflect"
 )
 
 type IFD struct {
@@ -113,7 +114,7 @@ func (i *IFD) Find(offset int64) (parser.Region, error) {
 }
 
 func (i *IFD) Split(start int64, end int64, newBit parser.Region) error {
-	return fmt.Errorf("IFD can not be split")
+	return fmt.Errorf("IFD between %v and %v can not be split between %v and %v to insert a %v", i.Start, i.End, start, end, reflect.TypeOf(newBit))
 }
 
 func (i *IFD) Render() ([]payload.Section, error) {

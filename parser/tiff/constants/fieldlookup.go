@@ -11,7 +11,7 @@ var FieldValueLookup = map[uint16]map[uint32]string{
 		32771: "Uncompressed (deprecated)",
 		32773: "PackBits",
 	},
-	262: {
+	262: { // Photometric interpretation.
 		0: "WhiteIsZero",
 		1: "BlackIsZero",
 		2: "RGB",
@@ -20,6 +20,20 @@ var FieldValueLookup = map[uint16]map[uint32]string{
 		5: "CMYK",
 		6: "YCbCr", // yes there is a gap, no I don't know why
 		8: "CIELab",
+	},
+	284: { // PlanarConfiguration
+		0: "Unknown",
+		1: "Chunky",
+		2: "Planar",
+	},
+	339 : { // SampleFormat
+		0: "Unknown",
+		1: "Unsigned Int",
+		2: "Signed Int",
+		3: "Float",
+		4: "Undefined",
+		5: "Complex Int",
+		6: "Complex Float",
 	},
 	// TODO: more of these
 }
