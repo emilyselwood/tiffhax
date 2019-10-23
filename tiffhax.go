@@ -35,7 +35,6 @@ func setupHttpServer(data payload.Payload) net.Listener {
 		// Simply write some test data for now
 		templates, err := template.ParseFiles(
 			"templates/index.template.html",
-			"templates/header.template.html",
 		)
 		if err != nil {
 			log.Fatalf("Could not parse template files %s", err)

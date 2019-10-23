@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ template "title" . }}</title>
+    <title>{{.Title}}</title>
     <style type="text/css">
         table {
             width: 100%
@@ -52,6 +52,22 @@
     </style>
 </head>
     <body>
-        {{ template "content" . }}
+    <h1>{{.FileName}}</h1>
+    <table>
+        <thead>
+        <tr>
+            <th>Offset</th>
+            <th>Data (Hex)</th>
+            <th>Description</th>
+        </tr>
+        </thead>
+        {{ range .Sections }}
+            <tr>
+                <td class="offset" id="{{ .ID }}" class="{{ .Class }}">{{ .Offset }}</td>
+                <td class="data">{{ .Data }}</td>
+                <td>{{ .Description }}</td>
+            </tr>
+        {{ end }}
+    </table>
     </body>
 </html>
