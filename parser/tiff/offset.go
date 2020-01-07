@@ -9,6 +9,7 @@ import (
 	"github.com/emilyselwood/tiffhax/payload"
 	"html/template"
 	"io"
+	"reflect"
 )
 
 /*
@@ -87,7 +88,7 @@ func (o *Offset) Find(offset int64) (parser.Region, error) {
 }
 
 func (o *Offset) Split(start int64, end int64, newBit parser.Region) error {
-	return fmt.Errorf("offset at %v to %v can not be split between %v and %v", o.Start, o.End, start, end)
+	return fmt.Errorf("Offset between %v and %v can not be split between %v and %v to insert a %v", o.Start, o.End, start, end, reflect.TypeOf(newBit))
 }
 
 func (o *Offset) Render() ([]payload.Section, error) {

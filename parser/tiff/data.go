@@ -50,7 +50,7 @@ func (d *Data) Find(offset int64) (parser.Region, error) {
 }
 
 func (d *Data) Split(start int64, end int64, newBit parser.Region) error {
-	return fmt.Errorf("offset can not be split")
+	return fmt.Errorf("data can not be split")
 }
 
 func (d *Data) Render() ([]payload.Section, error) {
