@@ -100,6 +100,13 @@ func (o *Offset) Render() ([]payload.Section, error) {
 		"DataTypeNames": func(typeId uint16) string {
 			return constants.DataTypeNames[typeId]
 		},
+		"FieldValueLookUp" : func() string {
+			if o.DType == 2 {
+				value := string(o.Data)
+				return " which decodes to \"" + value + "\""
+			}
+			return ""
+		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("couldn't render offset description, %v", err)
@@ -121,4 +128,4 @@ func (o *Offset) Render() ([]payload.Section, error) {
 	}, nil
 }
 
-const offsetTemplate = `{{.Count}} {{DataTypeNames .DType}} values for <a href="#{{.From}}">{{FieldNames .FieldId}}</a>`
+const offsetTemplate = `{{.Count}} {{DataTypeNames .DType}} values for <a href="#{{.From}}">{{FieldNames .FieldId}}</a> {{ FieldValueLookUp }}`

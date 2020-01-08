@@ -112,6 +112,10 @@ func (f *Field) Render() ([]payload.Section, error) {
 					return " which means " + value
 				}
 			}
+			if f.DType == 2 {
+				value := string(f.Data)
+				return " which decodes to " + value
+			}
 			return ""
 		},
 		// TODO: better descriptions
