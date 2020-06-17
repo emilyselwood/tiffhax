@@ -44,6 +44,9 @@ func ParseHeader(in io.Reader) (*Header, int64, error) {
 	}
 
 	magic := result.Endian.Uint16(data[2:4])
+	if magic == 43{
+		return &result, 8, fmt.Errorf("parsing bigtiff file not yet implemented")
+	}	
 	if magic != 42 {
 		return &result, 8, fmt.Errorf("not a tiff file, magic number was %v expected 42", magic)
 	}
