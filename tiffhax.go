@@ -47,7 +47,7 @@ func setupHttpServer(data payload.Payload) net.Listener {
 
 		// Now that the page has been loaded the program can exit once we've given the http handler time to finish its stuff
 		go func() {
-			time.Sleep(10 *time.Millisecond)
+			time.Sleep(5000 *time.Millisecond)
 			os.Exit(0)
 		}()
 
